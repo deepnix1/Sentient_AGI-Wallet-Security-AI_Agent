@@ -262,19 +262,34 @@ class WalletVisualizer:
         """Create complete interactive dashboard with all visualizations"""
         dashboard = {
             'address': address,
-            'total_transactions': len(transactions),
-            'charts': {}
+            'total_transactions': len(transactions)
         }
         
         try:
-            # Generate all visualizations
-            dashboard['charts']['timeline'] = self.create_transaction_timeline(transactions)
-            dashboard['charts']['network'] = self.create_network_graph(transactions)
-            dashboard['charts']['risk_distribution'] = self.create_risk_distribution(transactions)
-            dashboard['charts']['value_flow'] = self.create_value_flow_chart(transactions)
+            # Generate transaction summary
+            summary = self.generate_transaction_summary(transactions)
+            dashboard['summary'] = {
+                'total_transactions': summary.get('total_transactions', 0),
+                'total_volume': f"{summary.get('total_incoming_eth', 0) + summary.get('total_outgoing_eth', 0):.2f} ETH",
+                'unique_addresses': summary.get('unique_addresses', 0),
+                'first_transaction': summary.get('first_transaction', 'N/A').split(' ')[0]  # Just the date part
+            }
             
-            # Add transaction summary
-            dashboard['summary'] = self.generate_transaction_summary(transactions)
+            # Generate timeline data
+            timeline_data = self.generate_timeline_data(transactions)
+            dashboard['timeline'] = timeline_data
+            
+            # Generate risk distribution data
+            risk_data = self.generate_risk_distribution_data(transactions)
+            dashboard['risk_distribution'] = risk_data
+            
+            # Generate value flow data
+            value_data = self.generate_value_flow_data(transactions)
+            dashboard['value_flow'] = value_data
+            
+            # Generate network data
+            network_data = self.generate_network_data(transactions, address)
+            dashboard['network'] = network_data
             
         except Exception as e:
             dashboard['error'] = f"Visualization error: {str(e)}"
@@ -321,4 +336,97 @@ class WalletVisualizer:
             'unique_addresses': len(unique_addresses),
             'first_transaction': datetime.fromtimestamp(int(transactions[-1].get('timeStamp', 0))).strftime('%Y-%m-%d %H:%M:%S'),
             'last_transaction': datetime.fromtimestamp(int(transactions[0].get('timeStamp', 0))).strftime('%Y-%m-%d %H:%M:%S')
+        }
+    
+    def generate_timeline_data(self, transactions: List[Dict]) -> Dict[str, Any]:
+        """Generate timeline data for dashboard"""
+        if not transactions:
+            return {'dates': [], 'counts': []}
+        
+        # Group transactions by date
+        date_counts = {}
+        for tx in transactions:
+            timestamp = int(tx.get('timeStamp', 0))
+            date = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
+            date_counts[date] = date_counts.get(date, 0) + 1
+        
+        # Sort by date
+        sorted_dates = sorted(date_counts.keys())
+        return {
+            'dates': sorted_dates,
+            'counts': [date_counts[date] for date in sorted_dates]
+        }
+    
+    def generate_risk_distribution_data(self, transactions: List[Dict]) -> Dict[str, Any]:
+        """Generate risk distribution data for dashboard"""
+        if not transactions:
+            return {'values': [100], 'labels': ['No Data']}
+        
+        low_risk = 0
+        medium_risk = 0
+        high_risk = 0
+        
+        for tx in transactions:
+            if tx.get('isError') == '1':
+                high_risk += 1
+            elif float(tx.get('value', 0)) / 1e18 > 1.0:  # High value transactions
+                medium_risk += 1
+            else:
+                low_risk += 1
+        
+        total = len(transactions)
+        if total == 0:
+            return {'values': [100], 'labels': ['No Data']}
+        
+        return {
+            'values': [low_risk, medium_risk, high_risk],
+            'labels': ['Low Risk', 'Medium Risk', 'High Risk']
+        }
+    
+    def generate_value_flow_data(self, transactions: List[Dict]) -> Dict[str, Any]:
+        """Generate value flow data for dashboard"""
+        if not transactions:
+            return {'periods': [], 'values': []}
+        
+        # Group by month
+        monthly_values = {}
+        for tx in transactions:
+            timestamp = int(tx.get('timeStamp', 0))
+            month = datetime.fromtimestamp(timestamp).strftime('%Y-%m')
+            value = float(tx.get('value', 0)) / 1e18
+            monthly_values[month] = monthly_values.get(month, 0) + value
+        
+        # Sort by month
+        sorted_months = sorted(monthly_values.keys())
+        return {
+            'periods': sorted_months,
+            'values': [monthly_values[month] for month in sorted_months]
+        }
+    
+    def generate_network_data(self, transactions: List[Dict], address: str) -> Dict[str, Any]:
+        """Generate network data for dashboard"""
+        if not transactions:
+            return {'x': [0], 'y': [0], 'labels': ['No Data'], 'sizes': [20]}
+        
+        # Extract unique addresses
+        addresses = set()
+        for tx in transactions:
+            if tx.get('from'):
+                addresses.add(tx.get('from'))
+            if tx.get('to'):
+                addresses.add(tx.get('to'))
+        
+        # Create simple network visualization
+        addresses_list = list(addresses)[:10]  # Limit to 10 addresses for visualization
+        x_coords = list(range(len(addresses_list)))
+        y_coords = [0] * len(addresses_list)
+        
+        # Make the main address larger
+        sizes = [30 if addr == address else 20 for addr in addresses_list]
+        
+        return {
+            'x': x_coords,
+            'y': y_coords,
+            'labels': [addr[:10] + '...' for addr in addresses_list],
+            'sizes': sizes
         }

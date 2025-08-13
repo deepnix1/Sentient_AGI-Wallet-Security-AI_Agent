@@ -111,5 +111,25 @@ def dashboard(address):
     """Interactive dashboard page"""
     return render_template('dashboard.html', address=address)
 
+@app.route('/api/dashboard/<address>')
+def get_dashboard_data(address):
+    """Get dashboard data for an address"""
+    try:
+        # Check if we have scan results for this address
+        if address not in scan_results or scan_status.get(address) != "completed":
+            return jsonify({'error': 'No scan data available for this address'}), 404
+        
+        result = scan_results[address]
+        
+        # If it's a string (error), return error
+        if isinstance(result, str):
+            return jsonify({'error': result}), 500
+        
+        # Return the dashboard data
+        return jsonify(result.get('dashboard', {}))
+        
+    except Exception as e:
+        return jsonify({'error': f'Failed to get dashboard data: {str(e)}'}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

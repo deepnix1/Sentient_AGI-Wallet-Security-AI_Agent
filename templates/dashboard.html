@@ -265,21 +265,35 @@
             const errorSection = document.getElementById('errorSection');
 
             try {
-                // Simulate loading time for better UX
-                await new Promise(resolve => setTimeout(resolve, 2000));
-
+                // Fetch real dashboard data from the API
+                const response = await fetch(`/api/dashboard/${address}`);
+                
+                if (!response.ok) {
+                    throw new Error('No scan data available. Please scan the wallet first.');
+                }
+                
+                const dashboardData = await response.json();
+                
                 // Hide loading, show content
                 loadingSection.style.display = 'none';
                 dashboardContent.style.display = 'block';
 
-                // Load summary cards
-                loadSummaryCards();
-
-                // Load charts
-                loadTimelineChart();
-                loadRiskChart();
-                loadValueChart();
-                loadNetworkChart();
+                // Load summary cards with real data
+                loadSummaryCards(dashboardData.summary || {});
+                
+                // Load charts with real data
+                if (dashboardData.timeline) {
+                    loadTimelineChart(dashboardData.timeline);
+                }
+                if (dashboardData.risk_distribution) {
+                    loadRiskChart(dashboardData.risk_distribution);
+                }
+                if (dashboardData.value_flow) {
+                    loadValueChart(dashboardData.value_flow);
+                }
+                if (dashboardData.network) {
+                    loadNetworkChart(dashboardData.network);
+                }
 
             } catch (error) {
                 loadingSection.style.display = 'none';
@@ -287,43 +301,53 @@
                 errorSection.innerHTML = `
                     <div class="error-section">
                         <h3>Error Loading Dashboard</h3>
-                        <p>Failed to load dashboard data: ${error.message}</p>
+                        <p>${error.message}</p>
+                        <p style="margin-top: 16px; font-size: 0.9rem;">
+                            Please go back and scan the wallet first to generate dashboard data.
+                        </p>
                         <button class="back-btn" onclick="goBack()">Go Back</button>
                     </div>
                 `;
             }
         }
 
-        function loadSummaryCards() {
+        function loadSummaryCards(summaryData) {
             const summaryCards = document.getElementById('summaryCards');
+            const data = {
+                total_transactions: summaryData.total_transactions || 0,
+                total_volume: summaryData.total_volume || '0 ETH',
+                unique_addresses: summaryData.unique_addresses || 0,
+                first_transaction: summaryData.first_transaction || 'N/A'
+            };
+            
             summaryCards.innerHTML = `
                 <div class="summary-card">
                     <div class="summary-icon">⚡</div>
                     <div class="summary-label">Total Transactions</div>
-                    <div class="summary-value">24</div>
+                    <div class="summary-value">${data.total_transactions}</div>
                 </div>
                 <div class="summary-card">
                     <div class="summary-icon">⚔️</div>
                     <div class="summary-label">Total Volume</div>
-                    <div class="summary-value">2.45 ETH</div>
+                    <div class="summary-value">${data.total_volume}</div>
                 </div>
                 <div class="summary-card">
                     <div class="summary-icon">🔗</div>
                     <div class="summary-label">Unique Addresses</div>
-                    <div class="summary-value">18</div>
+                    <div class="summary-value">${data.unique_addresses}</div>
                 </div>
                 <div class="summary-card">
                     <div class="summary-icon">⚙️</div>
                     <div class="summary-label">First TX</div>
-                    <div class="summary-value">2023-01</div>
+                    <div class="summary-value">${data.first_transaction}</div>
                 </div>
             `;
         }
 
-        function loadTimelineChart() {
+        function loadTimelineChart(timelineData) {
             const data = [{
-                x: ['2023-01-15', '2023-02-20', '2023-03-10', '2023-04-05', '2023-05-12'],
-                y: [1, 3, 2, 4, 2],
+                x: timelineData.dates || ['No data'],
+                y: timelineData.counts || [0],
                 type: 'scatter',
                 mode: 'lines+markers',
                 line: { color: '#ffffff' },
@@ -336,11 +360,13 @@
                 font: { color: '#ffffff' },
                 xaxis: { 
                     gridcolor: '#333333',
-                    zerolinecolor: '#333333'
+                    zerolinecolor: '#333333',
+                    title: 'Date'
                 },
                 yaxis: { 
                     gridcolor: '#333333',
-                    zerolinecolor: '#333333'
+                    zerolinecolor: '#333333',
+                    title: 'Transaction Count'
                 },
                 margin: { t: 20, r: 20, b: 40, l: 40 }
             };
@@ -348,10 +374,10 @@
             Plotly.newPlot('timelineChart', data, layout, { responsive: true });
         }
 
-        function loadRiskChart() {
+        function loadRiskChart(riskData) {
             const data = [{
-                values: [70, 20, 10],
-                labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+                values: riskData.values || [100],
+                labels: riskData.labels || ['No Risk Data'],
                 type: 'pie',
                 marker: {
                     colors: ['#ffffff', '#888888', '#333333']
@@ -368,10 +394,10 @@
             Plotly.newPlot('riskChart', data, layout, { responsive: true });
         }
 
-        function loadValueChart() {
+        function loadValueChart(valueData) {
             const data = [{
-                x: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-                y: [0.5, 0.8, 0.3, 1.2, 0.6],
+                x: valueData.periods || ['No data'],
+                y: valueData.values || [0],
                 type: 'bar',
                 marker: { color: '#ffffff' }
             }];
@@ -382,11 +408,13 @@
                 font: { color: '#ffffff' },
                 xaxis: { 
                     gridcolor: '#333333',
-                    zerolinecolor: '#333333'
+                    zerolinecolor: '#333333',
+                    title: 'Period'
                 },
                 yaxis: { 
                     gridcolor: '#333333',
-                    zerolinecolor: '#333333'
+                    zerolinecolor: '#333333',
+                    title: 'Value (ETH)'
                 },
                 margin: { t: 20, r: 20, b: 40, l: 40 }
             };
@@ -394,17 +422,17 @@
             Plotly.newPlot('valueChart', data, layout, { responsive: true });
         }
 
-        function loadNetworkChart() {
+        function loadNetworkChart(networkData) {
             const data = [{
                 type: 'scatter',
                 mode: 'markers',
-                x: [1, 2, 3, 4, 5],
-                y: [1, 2, 3, 4, 5],
+                x: networkData.x || [0],
+                y: networkData.y || [0],
                 marker: { 
                     color: '#ffffff',
-                    size: 20
+                    size: networkData.sizes || 20
                 },
-                text: ['Wallet', 'Address 1', 'Address 2', 'Address 3', 'Address 4'],
+                text: networkData.labels || ['No Network Data'],
                 hoverinfo: 'text'
             }];
 
