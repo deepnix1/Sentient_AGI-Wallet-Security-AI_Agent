@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sentient Wallet Security AI Agent</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -419,6 +420,177 @@
             margin-right: 8px;
             color: #888888;
         }
+        
+        .report-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 24px;
+            padding: 24px;
+            border-top: 1px solid #333333;
+        }
+        
+        .action-btn {
+            background: #000000;
+            border: 1px solid #666666;
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+        
+        .action-btn:hover {
+            border-color: #ffffff;
+            background: #111111;
+        }
+        
+        .action-btn.copy-btn {
+            border-color: #666666;
+        }
+        
+        .action-btn.share-btn {
+            border-color: #1da1f2;
+            background: #1da1f2;
+            color: #ffffff;
+        }
+        
+        .action-btn.share-btn:hover {
+            background: #0d8bd9;
+            border-color: #0d8bd9;
+        }
+        
+        .action-btn i {
+            font-size: 1rem;
+        }
+        
+        /* Modal Styles */
+        .sharing-modal,
+        .share-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: #000000;
+            border: 1px solid #333333;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid #333333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #ffffff;
+            font-weight: 400;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: #888888;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        
+        .close-btn:hover {
+            background: #333333;
+            color: #ffffff;
+        }
+        
+        .modal-body {
+            padding: 24px;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #333333;
+            border-top: 3px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        .screenshot-preview {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .share-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .share-twitter-btn,
+        .download-btn {
+            background: #000000;
+            border: 1px solid #666666;
+            color: #ffffff;
+            padding: 16px 24px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+        
+        .share-twitter-btn {
+            background: #1da1f2;
+            border-color: #1da1f2;
+            color: #ffffff;
+        }
+        
+        .share-twitter-btn:hover {
+            background: #0d8bd9;
+            border-color: #0d8bd9;
+        }
+        
+        .download-btn:hover {
+            border-color: #ffffff;
+            background: #111111;
+        }
+        
+        .share-twitter-btn i,
+        .download-btn i {
+            font-size: 1.2rem;
+        }
 
         .error {
             color: #ffffff;
@@ -510,6 +682,25 @@
 
             .report-summary {
                 grid-template-columns: 1fr;
+            }
+            
+            .report-actions {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .modal-content {
+                width: 95%;
+                max-height: 90vh;
+            }
+            
+            .share-options {
+                flex-direction: column;
             }
         }
     </style>
@@ -879,6 +1070,15 @@
                         <i class="fas fa-history"></i>
                         Scan completed at ${new Date().toLocaleString()}
                     </div>
+                    
+                    <div class="report-actions">
+                        <button class="action-btn copy-btn" onclick="copyToClipboard(document.querySelector('.wallet-report').innerText, this)">
+                            <i class="fas fa-copy"></i> Copy Report
+                        </button>
+                        <button class="action-btn share-btn" onclick="shareStatistics()">
+                            <i class="fas fa-share-alt"></i> Share Statistics
+                        </button>
+                    </div>
                 </div>
             `;
         }
@@ -902,6 +1102,138 @@
                 scanWallet();
             }
         });
+        
+        // Share statistics functionality
+        async function shareStatistics() {
+            try {
+                const reportElement = document.querySelector('.wallet-report');
+                if (!reportElement) {
+                    showError('No report available to share');
+                    return;
+                }
+                
+                // Show sharing modal
+                showSharingModal();
+                
+                // Capture screenshot using html2canvas
+                const canvas = await html2canvas(reportElement, {
+                    backgroundColor: '#000000',
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true
+                });
+                
+                // Convert to blob
+                canvas.toBlob(async (blob) => {
+                    // Create share modal with screenshot
+                    showShareModalWithScreenshot(blob);
+                }, 'image/png');
+                
+            } catch (error) {
+                console.error('Error sharing statistics:', error);
+                showError('Failed to capture screenshot. Please try again.');
+            }
+        }
+        
+        // Show sharing modal
+        function showSharingModal() {
+            const modal = document.createElement('div');
+            modal.className = 'sharing-modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Preparing Your Statistics</h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="loading-spinner"></div>
+                        <p>Capturing screenshot...</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        // Show share modal with screenshot
+        function showShareModalWithScreenshot(blob) {
+            // Remove sharing modal
+            const sharingModal = document.querySelector('.sharing-modal');
+            if (sharingModal) {
+                sharingModal.remove();
+            }
+            
+            // Create share modal
+            const modal = document.createElement('div');
+            modal.className = 'share-modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Share Your Wallet Statistics</h3>
+                        <button class="close-btn" onclick="closeShareModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="screenshot-preview">
+                            <img id="screenshotImg" alt="Wallet Statistics Screenshot" style="max-width: 100%; border-radius: 8px;">
+                        </div>
+                        <div class="share-options">
+                            <button class="share-twitter-btn" onclick="shareToTwitter()">
+                                <i class="fab fa-twitter"></i> Share to Twitter
+                            </button>
+                            <button class="download-btn" onclick="downloadScreenshot()">
+                                <i class="fas fa-download"></i> Download Screenshot
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Display screenshot
+            const img = modal.querySelector('#screenshotImg');
+            img.src = URL.createObjectURL(blob);
+            
+            // Store blob for download
+            modal.dataset.screenshotBlob = blob;
+        }
+        
+        // Close share modal
+        function closeShareModal() {
+            const modal = document.querySelector('.share-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        // Share to Twitter
+        function shareToTwitter() {
+            const reportElement = document.querySelector('.wallet-report');
+            const address = reportElement.querySelector('.address').textContent;
+            const riskScore = reportElement.querySelector('.summary-value').textContent;
+            
+            const tweetText = `🔒 Here's my wallet security statistics made by @sentientAGI and @jackyjoeeth\n\n` +
+                            `Address: ${address}\n` +
+                            `Risk Score: ${riskScore}\n\n` +
+                            `#WalletSecurity #Blockchain #AI`;
+            
+            const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
+            window.open(twitterUrl, '_blank');
+        }
+        
+        // Download screenshot
+        function downloadScreenshot() {
+            const modal = document.querySelector('.share-modal');
+            const blob = modal.dataset.screenshotBlob;
+            
+            if (blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'wallet-security-report.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
     </script>
 </body>
 </html>
