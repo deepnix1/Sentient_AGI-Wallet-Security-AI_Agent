@@ -5,6 +5,7 @@ Flask web application with modern dark theme
 """
 
 from flask import Flask, render_template, request, jsonify
+from flask_cors import CORS
 import os
 from dotenv import load_dotenv
 from wallet_security_agent import WalletSecurityAgent
@@ -16,6 +17,7 @@ import time
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # Global variable to store scan results
 scan_results = {}
