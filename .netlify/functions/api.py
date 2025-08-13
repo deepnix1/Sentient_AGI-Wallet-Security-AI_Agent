@@ -117,6 +117,13 @@ def handler(event, context):
         elif path.endswith('/debug') and method == 'GET':
             print("Handling debug request")
             return handle_debug(headers)
+        elif path.endswith('/simple') and method == 'GET':
+            print("Handling simple test request")
+            return {
+                'statusCode': 200,
+                'headers': headers,
+                'body': json.dumps({'message': 'API is working!', 'timestamp': time.time()})
+            }
         else:
             print(f"Endpoint not found: {path}")
             return {
