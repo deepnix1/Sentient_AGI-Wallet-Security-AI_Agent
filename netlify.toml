@@ -1,10 +1,29 @@
 [build]
   publish = "."
-  command = "pip install -r .netlify/functions/requirements.txt"
+  command = "echo 'No build step required'"
 
 [build.environment]
   PYTHON_VERSION = "3.10"
 
+# Serve static files directly
+[[redirects]]
+  from = "/static/*"
+  to = "/static/:splat"
+  status = 200
+
+# Serve templates/index.html for root
+[[redirects]]
+  from = "/"
+  to = "/templates/index.html"
+  status = 200
+
+# API routes go to serverless functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# All other routes go to the main function
 [[redirects]]
   from = "/*"
   to = "/.netlify/functions/app"

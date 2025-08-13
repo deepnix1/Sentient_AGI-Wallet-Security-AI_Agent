@@ -1,105 +1,70 @@
 #!/usr/bin/env python3
 """
-Sentient Wallet Security AI Agent - Netlify Function
-Serverless function to serve the Flask application
+Main app function for serving the wallet scanner interface
 """
-import sys
 import os
 import json
 from pathlib import Path
 
-# Add the project root to Python path
-project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
-
-# Try to import Flask app with error handling
-try:
-    from app import app
-    flask_app_available = True
-except Exception as e:
-    print(f"Warning: Could not import Flask app: {e}")
-    flask_app_available = False
-
 def handler(event, context):
-    """Netlify function handler"""
+    """Netlify function handler for main app routes"""
     try:
-        # Check if Flask app is available
-        if not flask_app_available:
+        path = event.get('path', '/')
+        
+        # Get the project root
+        project_root = Path(__file__).parent.parent.parent
+        
+        # Handle different routes
+        if path == '/' or path == '/index.html':
+            # Serve the main page
+            index_path = project_root / 'templates' / 'index.html'
+            if index_path.exists():
+                with open(index_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'text/html'},
+                    'body': content
+                }
+            else:
+                return {
+                    'statusCode': 404,
+                    'headers': {'Content-Type': 'text/plain'},
+                    'body': 'Main page not found'
+                }
+        
+        elif path.startswith('/dashboard/'):
+            # For now, redirect to main page (dashboard functionality can be added later)
             return {
-                'statusCode': 500,
-                'headers': {'Content-Type': 'application/json'},
-                'body': json.dumps({
-                    'error': 'Flask application not available',
-                    'message': 'Please check the deployment configuration'
-                })
+                'statusCode': 302,
+                'headers': {'Location': '/'},
+                'body': ''
             }
         
-        # Import Flask test client for handling requests
-        with app.test_client() as client:
-            # Parse the event
-            path = event.get('path', '/')
-            method = event.get('httpMethod', 'GET')
-            headers = event.get('headers', {})
-            body = event.get('body', '')
-            
-            # Handle static files
-            if path.startswith('/static/'):
-                # Serve static files directly
-                static_path = path.lstrip('/')
-                full_path = project_root / static_path
+        else:
+            # Default to serving index.html for SPA routing
+            index_path = project_root / 'templates' / 'index.html'
+            if index_path.exists():
+                with open(index_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
                 
-                if full_path.exists():
-                    with open(full_path, 'rb') as f:
-                        content = f.read()
-                    
-                    # Determine content type
-                    content_type = 'text/plain'
-                    if static_path.endswith('.css'):
-                        content_type = 'text/css'
-                    elif static_path.endswith('.js'):
-                        content_type = 'application/javascript'
-                    elif static_path.endswith('.png'):
-                        content_type = 'image/png'
-                    elif static_path.endswith('.jpg') or static_path.endswith('.jpeg'):
-                        content_type = 'image/jpeg'
-                    
-                    return {
-                        'statusCode': 200,
-                        'headers': {'Content-Type': content_type},
-                        'body': content.decode('utf-8') if content_type.startswith('text/') else content
-                    }
-            
-            # Convert Netlify event to Flask request
-            if method == 'POST':
-                response = client.post(path, data=body, headers=headers)
-            elif method == 'PUT':
-                response = client.put(path, data=body, headers=headers)
-            elif method == 'DELETE':
-                response = client.delete(path, headers=headers)
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'text/html'},
+                    'body': content
+                }
             else:
-                response = client.get(path, headers=headers)
-            
-            # Return Netlify-compatible response
-            return {
-                'statusCode': response.status_code,
-                'headers': dict(response.headers),
-                'body': response.get_data(as_text=True)
-            }
-            
+                return {
+                    'statusCode': 404,
+                    'headers': {'Content-Type': 'text/plain'},
+                    'body': 'Page not found'
+                }
+                
     except Exception as e:
-        print(f"Error in handler: {e}")
+        print(f"Error in app handler: {e}")
         return {
             'statusCode': 500,
-            'headers': {'Content-Type': 'application/json'},
-            'body': json.dumps({
-                'error': 'Internal server error',
-                'message': str(e)
-            })
+            'headers': {'Content-Type': 'text/plain'},
+            'body': 'Internal server error'
         }
-
-# For local testing
-if __name__ == "__main__":
-    if flask_app_available:
-        app.run(debug=True, host='0.0.0.0', port=5000)
-    else:
-        print("Flask app not available for local testing")
