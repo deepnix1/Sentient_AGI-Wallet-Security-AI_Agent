@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentient Wallet Security AI Agent</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #888888;
+            font-weight: 300;
+        }
+
+        .scan-section {
+            background: #111111;
+            border: 1px solid #333333;
+            border-radius: 8px;
+            padding: 40px;
+            margin-bottom: 40px;
+        }
+
+        .scan-section h2 {
+            text-align: center;
+            margin-bottom: 32px;
+            font-weight: 400;
+            font-size: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .address-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 16px 20px;
+            border: 1px solid #333333;
+            border-radius: 6px;
+            background: #000000;
+            color: #ffffff;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.2s ease;
+        }
+
+        .address-input:focus {
+            outline: none;
+            border-color: #ffffff;
+        }
+
+        .address-input::placeholder {
+            color: #666666;
+        }
+
+        .scan-btn {
+            padding: 16px 32px;
+            background: #ffffff;
+            border: none;
+            border-radius: 6px;
+            color: #000000;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .scan-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .scan-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status-indicator {
+            text-align: center;
+            margin: 24px 0;
+            min-height: 60px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid #333333;
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        .result-section {
+            background: #111111;
+            border: 1px solid #333333;
+            border-radius: 8px;
+            padding: 0;
+            margin-top: 32px;
+            overflow: hidden;
+        }
+
+        /* Enhanced Wallet Report Styling */
+        .wallet-report {
+            background: #111111;
+            border: 1px solid #333333;
+            border-radius: 8px;
+            padding: 0;
+            margin-top: 32px;
+            overflow: hidden;
+        }
+
+        .report-header {
+            background: #000000;
+            padding: 32px;
+            text-align: center;
+            border-bottom: 1px solid #333333;
+        }
+
+        .report-header h2 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 400;
+            margin-bottom: 8px;
+        }
+
+        .report-header p {
+            margin: 0;
+            color: #888888;
+            font-size: 1rem;
+        }
+
+        .report-content {
+            padding: 32px;
+        }
+
+        .wallet-address {
+            background: #000000;
+            border: 1px solid #333333;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 24px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .wallet-address .label {
+            color: #888888;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .wallet-address .address {
+            color: #ffffff;
+            font-size: 1rem;
+            word-break: break-all;
+        }
+
+        .copy-address {
+            background: transparent;
+            border: 1px solid #666666;
+            color: #888888;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 12px;
+            display: inline-block;
+        }
+
+        .copy-address:hover {
+            border-color: #ffffff;
+            color: #ffffff;
+        }
+
+        .copy-address.copied {
+            border-color: #ffffff;
+            color: #ffffff;
+        }
+
+        .report-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .summary-card {
+            background: #000000;
+            border: 1px solid #333333;
+            border-radius: 6px;
+            padding: 24px;
+            text-align: center;
+            transition: border-color 0.2s ease;
+        }
+
+        .summary-card:hover {
+            border-color: #666666;
+        }
+
+        .summary-icon {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            opacity: 0.8;
+        }
+
+        .summary-label {
+            font-size: 0.8rem;
+            color: #888888;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .summary-value {
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: #ffffff;
+        }
+
+        .risk-meter {
+            width: 100%;
+            height: 4px;
+            background: #333333;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+
+        .risk-fill {
+            height: 100%;
+            background: #ffffff;
+            transition: width 1s ease;
+            border-radius: 2px;
+        }
+
+        .report-section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #ffffff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title i {
+            font-size: 1rem;
+            color: #888888;
+        }
+
+        .findings-list, .recommendations-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .finding-item, .recommendation-item {
+            background: #000000;
+            border: 1px solid #333333;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            transition: border-color 0.2s ease;
+        }
+
+        .finding-item:hover, .recommendation-item:hover {
+            border-color: #666666;
+        }
+
+        .finding-icon, .recommendation-icon {
+            font-size: 1.2rem;
+            color: #888888;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .finding-content, .recommendation-content {
+            flex: 1;
+        }
+
+        .finding-text, .recommendation-text {
+            color: #ffffff;
+            font-size: 1rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .no-issues {
+            background: #000000;
+            border: 1px solid #333333;
+            border-radius: 6px;
+            padding: 32px;
+            text-align: center;
+        }
+
+        .no-issues i {
+            font-size: 2.5rem;
+            color: #888888;
+            margin-bottom: 16px;
+        }
+
+        .no-issues h3 {
+            color: #ffffff;
+            margin-bottom: 12px;
+            font-weight: 400;
+        }
+
+        .no-issues p {
+            color: #888888;
+            font-size: 1rem;
+        }
+
+        .report-footer {
+            background: #000000;
+            padding: 24px;
+            text-align: center;
+            border-top: 1px solid #333333;
+        }
+
+        .report-footer p {
+            margin: 0;
+            color: #888888;
+            font-size: 0.9rem;
+        }
+
+        .report-footer .powered-by {
+            color: #ffffff;
+            margin-top: 8px;
+        }
+
+        .scan-timestamp {
+            text-align: center;
+            color: #666666;
+            font-size: 0.8rem;
+            margin-top: 16px;
+            padding: 16px;
+            background: #000000;
+            border-radius: 6px;
+            border: 1px solid #333333;
+        }
+
+        .scan-timestamp i {
+            margin-right: 8px;
+            color: #888888;
+        }
+
+        .error {
+            color: #ffffff;
+            background: #000000;
+            border: 1px solid #333333;
+            padding: 16px;
+            border-radius: 6px;
+            margin: 16px 0;
+        }
+
+        .success {
+            color: #ffffff;
+            background: #000000;
+            border: 1px solid #333333;
+            padding: 16px;
+            border-radius: 6px;
+            margin: 16px 0;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: #111111;
+            border: 1px solid #333333;
+            border-radius: 6px;
+            padding: 24px;
+            text-align: center;
+            transition: border-color 0.2s ease;
+        }
+
+        .feature-card:hover {
+            border-color: #666666;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            color: #888888;
+        }
+
+        .feature-card h3 {
+            margin-bottom: 12px;
+            color: #ffffff;
+            font-weight: 400;
+        }
+
+        .feature-card p {
+            color: #888888;
+            line-height: 1.6;
+            font-size: 0.9rem;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 32px;
+            color: #666666;
+            border-top: 1px solid #333333;
+            font-size: 0.9rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .address-input {
+                min-width: 100%;
+            }
+            
+            .scan-section {
+                padding: 24px;
+            }
+
+            .report-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sentient Wallet Security AI Agent</h1>
+            <p>Protect your crypto assets with AI-powered security scanning by @jackyjoeeth</p>
+        </div>
+
+        <div class="scan-section">
+            <h2>Scan Wallet Address</h2>
+            
+            <div class="input-group">
+                <input type="text" 
+                       class="address-input" 
+                       id="addressInput" 
+                       placeholder="Enter EVM wallet address (e.g., 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6)"
+                       maxlength="42">
+                <button class="scan-btn" id="scanBtn" onclick="scanWallet()">
+                    Scan Wallet
+                </button>
+            </div>
+
+            <div class="status-indicator" id="statusIndicator"></div>
+            
+            <div id="resultSection" style="display: none;"></div>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>AI-Powered Security</h3>
+                <p>Advanced machine learning algorithms detect malicious contracts and suspicious patterns in real-time.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Risk Assessment</h3>
+                <p>Get detailed risk scores from 0-100 with color-coded security levels and actionable recommendations.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <h3>Privacy First</h3>
+                <p>Non-custodial solution - your private keys stay with you. We only analyze public blockchain data.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3>Real-Time Analysis</h3>
+                <p>Instant scanning using live blockchain data from Etherscan API for up-to-date security insights.</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2024 Sentient Wallet Security AI Agent by @jackyjoeeth. Built with ❤️ for the crypto community.</p>
+        </div>
+    </div>
+
+    <script>
+        // Address validation
+        function validateAddress(address) {
+            return /^0x[a-fA-F0-9]{40}$/.test(address);
+        }
+
+        // Scan wallet function
+        async function scanWallet() {
+            const addressInput = document.getElementById('addressInput');
+            const scanBtn = document.getElementById('scanBtn');
+            const statusIndicator = document.getElementById('statusIndicator');
+            const resultSection = document.getElementById('resultSection');
+            
+            const address = addressInput.value.trim();
+            
+            if (!address) {
+                showError('Please enter a wallet address');
+                return;
+            }
+            
+            if (!validateAddress(address)) {
+                showError('Invalid EVM address format. Address must start with 0x and be 42 characters long.');
+                return;
+            }
+            
+            // Disable button and show loading
+            scanBtn.disabled = true;
+            scanBtn.innerHTML = 'Scanning...';
+            statusIndicator.innerHTML = '<div class="loading"></div><p>Scanning wallet...</p>';
+            resultSection.style.display = 'none';
+            
+            try {
+                // Start scan
+                const response = await fetch('/scan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ address: address })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to start scan');
+                }
+                
+                // Poll for results
+                pollResults(address);
+                
+            } catch (error) {
+                showError(error.message);
+                resetUI();
+            }
+        }
+
+        // Poll for scan results
+        async function pollResults(address) {
+            const statusIndicator = document.getElementById('statusIndicator');
+            const resultSection = document.getElementById('resultSection');
+            
+            const pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/status/${address}`);
+                    const data = await response.json();
+                    
+                    if (data.status === 'completed') {
+                        clearInterval(pollInterval);
+                        showResults(data.result);
+                        resetUI();
+                    } else if (data.status === 'error') {
+                        clearInterval(pollInterval);
+                        showError(data.result);
+                        resetUI();
+                    }
+                } catch (error) {
+                    clearInterval(pollInterval);
+                    showError('Failed to get scan results');
+                    resetUI();
+                }
+            }, 1000);
+        }
+
+        // Show results
+        function showResults(result) {
+            const resultSection = document.getElementById('resultSection');
+            const statusIndicator = document.getElementById('statusIndicator');
+            
+            statusIndicator.innerHTML = '<div class="success"><i class="fas fa-check-circle"></i> Scan completed successfully!</div>';
+            
+            // Check if result has dashboard data
+            if (typeof result === 'object' && result.dashboard) {
+                const enhancedReport = createEnhancedReport(result.security_report, document.getElementById('addressInput').value.trim());
+                resultSection.innerHTML = `
+                    ${enhancedReport}
+                    
+                    <div style="text-align: center; margin-top: 32px;">
+                        <a href="/dashboard/${document.getElementById('addressInput').value.trim()}" 
+                           class="scan-btn" 
+                           style="display: inline-block; text-decoration: none;">
+                            <i class="fas fa-chart-line"></i> View Interactive Dashboard
+                        </a>
+                    </div>
+                `;
+            } else {
+                const enhancedReport = createEnhancedReport(result, document.getElementById('addressInput').value.trim());
+                resultSection.innerHTML = enhancedReport;
+            }
+            
+            resultSection.style.display = 'block';
+        }
+
+        // Copy address to clipboard
+        function copyToClipboard(text, button) {
+            navigator.clipboard.writeText(text).then(() => {
+                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.innerHTML = '<i class="fas fa-copy"></i> Copy Address';
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.innerHTML = '<i class="fas fa-copy"></i> Copy Address';
+                    button.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Create enhanced wallet report UI
+        function createEnhancedReport(reportText, address) {
+            // Parse the report text to extract information
+            const lines = reportText.split('\n');
+            let riskScore = '0';
+            let riskLevel = '🟢 SAFE';
+            let findings = [];
+            let recommendations = [];
+            let hasFindings = false;
+            
+            // Extract information from report
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                
+                if (line.includes('Risk Score:')) {
+                    riskScore = line.split(':')[1].split('/')[0].trim();
+                } else if (line.includes('Risk Level:')) {
+                    riskLevel = line.split(':')[1].trim();
+                } else if (line.includes('🚨 SECURITY FINDINGS:')) {
+                    hasFindings = true;
+                    i++;
+                    while (i < lines.length && lines[i].trim() && !lines[i].trim().startsWith('💡')) {
+                        const finding = lines[i].trim();
+                        if (finding && !finding.startsWith('=')) {
+                            findings.push(finding);
+                        }
+                        i++;
+                    }
+                } else if (line.includes('💡 RECOMMENDATIONS:')) {
+                    i++;
+                    while (i < lines.length && lines[i].trim() && !lines[i].trim().startsWith('=')) {
+                        const rec = lines[i].trim();
+                        if (rec && !rec.startsWith('=')) {
+                            recommendations.push(rec);
+                        }
+                        i++;
+                    }
+                }
+            }
+            
+            // Create enhanced HTML
+            return `
+                <div class="wallet-report">
+                    <div class="report-header">
+                        <h2>Wallet Security Report</h2>
+                        <p>Comprehensive security analysis completed</p>
+                    </div>
+                    
+                    <div class="report-content">
+                        <div class="wallet-address">
+                            <span class="label">Analyzed Address</span>
+                            <div class="address">${address}</div>
+                            <button class="copy-address" onclick="copyToClipboard('${address}', this)">
+                                <i class="fas fa-copy"></i> Copy Address
+                            </button>
+                        </div>
+                        
+                        <div class="report-summary">
+                            <div class="summary-card">
+                                <div class="summary-icon">📊</div>
+                                <div class="summary-label">Risk Score</div>
+                                <div class="summary-value">${riskScore}/100</div>
+                                <div class="risk-meter">
+                                    <div class="risk-fill" style="width: ${riskScore}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="summary-card">
+                                <div class="summary-icon">⚠️</div>
+                                <div class="summary-label">Risk Level</div>
+                                <div class="summary-value">${riskLevel}</div>
+                            </div>
+                            
+                            <div class="summary-card">
+                                <div class="summary-icon">🔍</div>
+                                <div class="summary-label">Findings</div>
+                                <div class="summary-value">${findings.length}</div>
+                            </div>
+                            
+                            <div class="summary-card">
+                                <div class="summary-icon">💡</div>
+                                <div class="summary-label">Recommendations</div>
+                                <div class="summary-value">${recommendations.length}</div>
+                            </div>
+                        </div>
+                        
+                        ${hasFindings ? `
+                            <div class="report-section">
+                                <div class="section-title">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Security Findings
+                                </div>
+                                <ul class="findings-list">
+                                    ${findings.map(finding => `
+                                        <li class="finding-item">
+                                            <div class="finding-icon">
+                                                <i class="fas fa-exclamation-circle"></i>
+                                            </div>
+                                            <div class="finding-content">
+                                                <p class="finding-text">${finding}</p>
+                                            </div>
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        ` : `
+                            <div class="report-section">
+                                <div class="no-issues">
+                                    <i class="fas fa-check-circle"></i>
+                                    <h3>No Security Issues Detected</h3>
+                                    <p>This wallet appears to be safe with no suspicious activity found.</p>
+                                </div>
+                            </div>
+                        `}
+                        
+                        <div class="report-section">
+                            <div class="section-title">
+                                <i class="fas fa-lightbulb"></i>
+                                Security Recommendations
+                            </div>
+                            <ul class="recommendations-list">
+                                ${recommendations.map(rec => `
+                                    <li class="recommendation-item">
+                                        <div class="recommendation-icon">
+                                            <i class="fas fa-shield-check"></i>
+                                        </div>
+                                        <div class="recommendation-content">
+                                            <p class="recommendation-text">${rec}</p>
+                                        </div>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="report-footer">
+                        <p>Report generated by Sentient Wallet Security AI Agent</p>
+                        <p class="powered-by">Powered by @jackyjoeeth</p>
+                    </div>
+                    
+                    <div class="scan-timestamp">
+                        <i class="fas fa-clock"></i>
+                        Scan completed at ${new Date().toLocaleString()}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Show error
+        function showError(message) {
+            const statusIndicator = document.getElementById('statusIndicator');
+            statusIndicator.innerHTML = `<div class="error"><i class="fas fa-exclamation-circle"></i> ${message}</div>`;
+        }
+
+        // Reset UI
+        function resetUI() {
+            const scanBtn = document.getElementById('scanBtn');
+            scanBtn.disabled = false;
+            scanBtn.innerHTML = 'Scan Wallet';
+        }
+
+        // Enter key support
+        document.getElementById('addressInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                scanWallet();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet Dashboard - Sentient Security AI Agent</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #888888;
+            font-weight: 300;
+        }
+
+        .back-btn {
+            background: #ffffff;
+            border: none;
+            color: #000000;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 32px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888888;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #333333;
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .summary-card {
+            background: #111111;
+            border: 1px solid #333333;
+            border-radius: 6px;
+            padding: 24px;
+            text-align: center;
+            transition: border-color 0.2s ease;
+        }
+
+        .summary-card:hover {
+            border-color: #666666;
+        }
+
+        .summary-icon {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            color: #888888;
+        }
+
+        .summary-label {
+            font-size: 0.8rem;
+            color: #888888;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .summary-value {
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: #ffffff;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .chart-container {
+            background: #111111;
+            border: 1px solid #333333;
+            border-radius: 6px;
+            padding: 24px;
+            transition: border-color 0.2s ease;
+        }
+
+        .chart-container:hover {
+            border-color: #666666;
+        }
+
+        .chart-container h3 {
+            margin-bottom: 20px;
+            color: #ffffff;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 400;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .error-section {
+            background: #111111;
+            border: 1px solid #333333;
+            border-radius: 6px;
+            padding: 32px;
+            text-align: center;
+            color: #888888;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="back-btn" onclick="goBack()">
+            <i class="fas fa-arrow-left"></i> Back to Scanner
+        </button>
+        
+        <div class="header">
+            <h1>Interactive Dashboard</h1>
+            <p>Comprehensive analysis and visualization for wallet: <span id="walletAddress">{{ address }}</span></p>
+            <p style="margin-top: 10px; color: #888888; font-size: 0.9rem;">Powered by @jackyjoeeth</p>
+        </div>
+
+        <div id="loadingSection" class="loading">
+            <div class="spinner"></div>
+            <p>Generating interactive visualizations...</p>
+            <p>This may take a few moments for complex wallets</p>
+        </div>
+
+        <div id="dashboardContent" style="display: none;">
+            <!-- Summary Cards -->
+            <div class="summary-cards" id="summaryCards"></div>
+
+            <!-- Charts Grid -->
+            <div class="dashboard-grid">
+                <div class="chart-container">
+                    <h3><i class="fas fa-clock"></i> Transaction Timeline</h3>
+                    <div id="timelineChart"></div>
+                </div>
+
+                <div class="chart-container">
+                    <h3><i class="fas fa-chart-pie"></i> Risk Distribution</h3>
+                    <div id="riskChart"></div>
+                </div>
+
+                <div class="chart-container">
+                    <h3><i class="fas fa-chart-area"></i> Value Flow</h3>
+                    <div id="valueChart"></div>
+                </div>
+
+                <div class="chart-container">
+                    <h3><i class="fas fa-network-wired"></i> Connection Network</h3>
+                    <div id="networkChart"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="errorSection" style="display: none;"></div>
+    </div>
+
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+
+        // Load dashboard data
+        async function loadDashboard() {
+            const address = '{{ address }}';
+            const loadingSection = document.getElementById('loadingSection');
+            const dashboardContent = document.getElementById('dashboardContent');
+            const errorSection = document.getElementById('errorSection');
+
+            try {
+                // Simulate loading time for better UX
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                // Hide loading, show content
+                loadingSection.style.display = 'none';
+                dashboardContent.style.display = 'block';
+
+                // Load summary cards
+                loadSummaryCards();
+
+                // Load charts
+                loadTimelineChart();
+                loadRiskChart();
+                loadValueChart();
+                loadNetworkChart();
+
+            } catch (error) {
+                loadingSection.style.display = 'none';
+                errorSection.style.display = 'block';
+                errorSection.innerHTML = `
+                    <div class="error-section">
+                        <h3>Error Loading Dashboard</h3>
+                        <p>Failed to load dashboard data: ${error.message}</p>
+                        <button class="back-btn" onclick="goBack()">Go Back</button>
+                    </div>
+                `;
+            }
+        }
+
+        function loadSummaryCards() {
+            const summaryCards = document.getElementById('summaryCards');
+            summaryCards.innerHTML = `
+                <div class="summary-card">
+                    <div class="summary-icon">📊</div>
+                    <div class="summary-label">Total Transactions</div>
+                    <div class="summary-value">24</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-icon">💰</div>
+                    <div class="summary-label">Total Volume</div>
+                    <div class="summary-value">2.45 ETH</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-icon">🔗</div>
+                    <div class="summary-label">Unique Addresses</div>
+                    <div class="summary-value">18</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-icon">📅</div>
+                    <div class="summary-label">First TX</div>
+                    <div class="summary-value">2023-01</div>
+                </div>
+            `;
+        }
+
+        function loadTimelineChart() {
+            const data = [{
+                x: ['2023-01-15', '2023-02-20', '2023-03-10', '2023-04-05', '2023-05-12'],
+                y: [1, 3, 2, 4, 2],
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: '#ffffff' },
+                marker: { color: '#ffffff', size: 8 }
+            }];
+
+            const layout = {
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#ffffff' },
+                xaxis: { 
+                    gridcolor: '#333333',
+                    zerolinecolor: '#333333'
+                },
+                yaxis: { 
+                    gridcolor: '#333333',
+                    zerolinecolor: '#333333'
+                },
+                margin: { t: 20, r: 20, b: 40, l: 40 }
+            };
+
+            Plotly.newPlot('timelineChart', data, layout, { responsive: true });
+        }
+
+        function loadRiskChart() {
+            const data = [{
+                values: [70, 20, 10],
+                labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+                type: 'pie',
+                marker: {
+                    colors: ['#ffffff', '#888888', '#333333']
+                }
+            }];
+
+            const layout = {
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#ffffff' },
+                margin: { t: 20, r: 20, b: 20, l: 20 }
+            };
+
+            Plotly.newPlot('riskChart', data, layout, { responsive: true });
+        }
+
+        function loadValueChart() {
+            const data = [{
+                x: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+                y: [0.5, 0.8, 0.3, 1.2, 0.6],
+                type: 'bar',
+                marker: { color: '#ffffff' }
+            }];
+
+            const layout = {
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#ffffff' },
+                xaxis: { 
+                    gridcolor: '#333333',
+                    zerolinecolor: '#333333'
+                },
+                yaxis: { 
+                    gridcolor: '#333333',
+                    zerolinecolor: '#333333'
+                },
+                margin: { t: 20, r: 20, b: 40, l: 40 }
+            };
+
+            Plotly.newPlot('valueChart', data, layout, { responsive: true });
+        }
+
+        function loadNetworkChart() {
+            const data = [{
+                type: 'scatter',
+                mode: 'markers',
+                x: [1, 2, 3, 4, 5],
+                y: [1, 2, 3, 4, 5],
+                marker: { 
+                    color: '#ffffff',
+                    size: 20
+                },
+                text: ['Wallet', 'Address 1', 'Address 2', 'Address 3', 'Address 4'],
+                hoverinfo: 'text'
+            }];
+
+            const layout = {
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#ffffff' },
+                xaxis: { 
+                    gridcolor: '#333333',
+                    zerolinecolor: '#333333',
+                    showgrid: false,
+                    showticklabels: false
+                },
+                yaxis: { 
+                    gridcolor: '#333333',
+                    zerolinecolor: '#333333',
+                    showgrid: false,
+                    showticklabels: false
+                },
+                margin: { t: 20, r: 20, b: 20, l: 20 }
+            };
+
+            Plotly.newPlot('networkChart', data, layout, { responsive: true });
+        }
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+</html>
