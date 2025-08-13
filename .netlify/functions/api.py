@@ -49,6 +49,7 @@ def generate_basic_stats(transactions):
 
 def handler(event, context):
     """Netlify serverless function handler"""
+    global wallet_agent
     try:
         # Parse the request
         method = event.get('httpMethod', 'GET')
