@@ -731,7 +731,7 @@
     <div class="container">
         <div class="header">
                     <div class="logo-container">
-            <img src="{{ url_for('static', filename='images/sentient-logo.png') }}" alt="Sentient AGI Logo" class="logo">
+            <img src="/static/images/sentient-logo.png" alt="Sentient AGI Logo" class="logo">
         </div>
             <h1>Sentient Wallet Security AI Agent</h1>
             <p>Protect your crypto assets with AI-powered security scanning by @jackyjoeeth</p>
@@ -827,8 +827,11 @@
             resultSection.style.display = 'none';
             
                          try {
-                 // Start scan
-                 const response = await fetch('/scan', {
+                 // Start scan - use different endpoints for localhost vs Netlify
+                 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                 const scanEndpoint = isLocalhost ? '/scan' : '/api/scan';
+                 
+                 const response = await fetch(scanEndpoint, {
                      method: 'POST',
                      headers: {
                          'Content-Type': 'application/json',
@@ -857,7 +860,11 @@
             
                          const pollInterval = setInterval(async () => {
                  try {
-                     const response = await fetch(`/status/${address}`);
+                     // Use different endpoints for localhost vs Netlify
+                     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                     const statusEndpoint = isLocalhost ? `/status/${address}` : `/api/status?address=${address}`;
+                     
+                     const response = await fetch(statusEndpoint);
                      const data = await response.json();
                     
                     if (data.status === 'completed') {
@@ -990,7 +997,7 @@
                 <div class="wallet-report">
                     <div class="report-header">
                                     <div class="report-logo-container">
-                <img src="{{ url_for('static', filename='images/sentient-logo.png') }}" alt="Sentient AGI Logo" class="report-logo">
+                <img src="/static/images/sentient-logo.png" alt="Sentient AGI Logo" class="report-logo">
             </div>
                         <h2>Wallet Security Report</h2>
                         <p>Comprehensive security analysis completed</p>
