@@ -13,12 +13,16 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 # Import the wallet security agent
+agent_available = False
 try:
     from wallet_security_agent import WalletSecurityAgent
     from wallet_visualizer import WalletVisualizer
     agent_available = True
+    print("Successfully imported wallet security agent and visualizer")
 except Exception as e:
     print(f"Warning: Could not import wallet security agent: {e}")
+    import traceback
+    traceback.print_exc()
     agent_available = False
 
 # Global storage for scan results (in production, use a proper database)
@@ -64,15 +68,19 @@ def handler(event, context):
             return handle_status(body, headers)
         elif path.endswith('/health') and method == 'GET':
             return handle_health(headers)
+        elif path.endswith('/test') and method == 'GET':
+            return handle_test(headers)
         else:
             return {
                 'statusCode': 404,
                 'headers': headers,
-                'body': json.dumps({'error': 'Endpoint not found'})
+                'body': json.dumps({'error': 'Endpoint not found', 'path': path})
             }
             
     except Exception as e:
         print(f"Error in API handler: {e}")
+        import traceback
+        traceback.print_exc()
         return {
             'statusCode': 500,
             'headers': {'Content-Type': 'application/json'},
@@ -89,7 +97,20 @@ def handle_health(headers):
         'headers': headers,
         'body': json.dumps({
             'status': 'healthy',
-            'message': 'Sentient Wallet Security AI Agent is running'
+            'message': 'Sentient Wallet Security AI Agent is running',
+            'agent_available': agent_available
+        })
+    }
+
+def handle_test(headers):
+    """Test endpoint to verify API is working"""
+    return {
+        'statusCode': 200,
+        'headers': headers,
+        'body': json.dumps({
+            'message': 'API is working',
+            'agent_available': agent_available,
+            'timestamp': time.time()
         })
     }
 

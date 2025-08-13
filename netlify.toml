@@ -1,6 +1,6 @@
 [build]
   publish = "."
-  command = "echo 'No build step required'"
+  command = "pip install -r .netlify/functions/requirements.txt"
 
 [build.environment]
   PYTHON_VERSION = "3.10"
@@ -20,7 +20,7 @@
 # API routes go to serverless functions
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
+  to = "/.netlify/functions/api"
   status = 200
 
 # All other routes go to the main function
