@@ -3,7 +3,6 @@
 Sentient Wallet Security AI Agent - Netlify Function
 Serverless function to serve the Flask application
 """
-
 import sys
 import os
 import json
@@ -42,6 +41,33 @@ def handler(event, context):
             method = event.get('httpMethod', 'GET')
             headers = event.get('headers', {})
             body = event.get('body', '')
+            
+            # Handle static files
+            if path.startswith('/static/'):
+                # Serve static files directly
+                static_path = path.lstrip('/')
+                full_path = project_root / static_path
+                
+                if full_path.exists():
+                    with open(full_path, 'rb') as f:
+                        content = f.read()
+                    
+                    # Determine content type
+                    content_type = 'text/plain'
+                    if static_path.endswith('.css'):
+                        content_type = 'text/css'
+                    elif static_path.endswith('.js'):
+                        content_type = 'application/javascript'
+                    elif static_path.endswith('.png'):
+                        content_type = 'image/png'
+                    elif static_path.endswith('.jpg') or static_path.endswith('.jpeg'):
+                        content_type = 'image/jpeg'
+                    
+                    return {
+                        'statusCode': 200,
+                        'headers': {'Content-Type': content_type},
+                        'body': content.decode('utf-8') if content_type.startswith('text/') else content
+                    }
             
             # Convert Netlify event to Flask request
             if method == 'POST':

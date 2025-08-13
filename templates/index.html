@@ -826,15 +826,15 @@
             statusIndicator.innerHTML = '<div class="loading"></div><p>Scanning wallet...</p>';
             resultSection.style.display = 'none';
             
-            try {
-                // Start scan
-                const response = await fetch('/api/scan', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ address: address })
-                });
+                         try {
+                 // Start scan
+                 const response = await fetch('/scan', {
+                     method: 'POST',
+                     headers: {
+                         'Content-Type': 'application/json',
+                     },
+                     body: JSON.stringify({ address: address })
+                 });
                 
                 if (!response.ok) {
                     const error = await response.json();
@@ -855,10 +855,10 @@
             const statusIndicator = document.getElementById('statusIndicator');
             const resultSection = document.getElementById('resultSection');
             
-            const pollInterval = setInterval(async () => {
-                try {
-                    const response = await fetch(`/api/status`);
-                    const data = await response.json();
+                         const pollInterval = setInterval(async () => {
+                 try {
+                     const response = await fetch(`/status/${address}`);
+                     const data = await response.json();
                     
                     if (data.status === 'completed') {
                         clearInterval(pollInterval);
