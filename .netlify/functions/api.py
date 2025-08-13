@@ -68,8 +68,10 @@ Powered by @jackyjoeeth
 def handler(event, context):
     """Handle API requests"""
     try:
+        print(f"API handler called with event: {event}")
         path = event.get('path', '')
         method = event.get('httpMethod', 'GET')
+        print(f"Path: {path}, Method: {method}")
         
         # Handle CORS
         headers = {
@@ -98,21 +100,29 @@ def handler(event, context):
             body = event.get('queryStringParameters', {})
         
         # Route requests based on path
+        print(f"Routing request: path={path}, method={method}")
+        
         if path.endswith('/scan') and method == 'POST':
+            print("Handling scan request")
             return handle_scan(body, headers)
         elif path.endswith('/status') and method == 'GET':
+            print("Handling status request")
             return handle_status(body, headers)
         elif path.endswith('/health') and method == 'GET':
+            print("Handling health request")
             return handle_health(headers)
         elif path.endswith('/test') and method == 'GET':
+            print("Handling test request")
             return handle_test(headers)
         elif path.endswith('/debug') and method == 'GET':
+            print("Handling debug request")
             return handle_debug(headers)
         else:
+            print(f"Endpoint not found: {path}")
             return {
                 'statusCode': 404,
                 'headers': headers,
-                'body': json.dumps({'error': 'Endpoint not found', 'path': path})
+                'body': json.dumps({'error': 'Endpoint not found', 'path': path, 'method': method})
             }
             
     except Exception as e:
