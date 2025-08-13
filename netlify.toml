@@ -1,16 +1,14 @@
 [build]
-  command = "pip install -r api/requirements_vercel.txt"
   publish = "."
+  command = "pip install -r requirements.txt"
 
 [build.environment]
   PYTHON_VERSION = "3.10"
 
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
+  from = "/*"
+  to = "/.netlify/functions/app"
   status = 200
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+[functions]
+  directory = ".netlify/functions"

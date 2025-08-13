@@ -4,6 +4,3 @@ flask==3.0.0
 plotly>=6.3.0
 networkx>=3.4.2
 pandas>=2.3.1
-# Use recent FastAPI/uvicorn so wheels are available for Python 3.13
-fastapi>=0.115.0
-uvicorn[standard]>=0.30.0
