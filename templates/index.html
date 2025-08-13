@@ -828,7 +828,7 @@
             
             try {
                 // Start scan
-                const response = await fetch('/scan', {
+                const response = await fetch('/api/scan', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -857,7 +857,7 @@
             
             const pollInterval = setInterval(async () => {
                 try {
-                    const response = await fetch(`/status/${address}`);
+                    const response = await fetch(`/api/status`);
                     const data = await response.json();
                     
                     if (data.status === 'completed') {

@@ -6,8 +6,13 @@
   PYTHON_VERSION = "3.10"
 
 [[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
   from = "/*"
-  to = "/.netlify/functions/app"
+  to = "/.netlify/functions/static"
   status = 200
 
 [functions]
