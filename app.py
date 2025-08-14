@@ -58,6 +58,11 @@ def index():
     """Main page"""
     return render_template('index.html')
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint"""
+    return jsonify({'status': 'healthy', 'service': 'Sentient Wallet Security AI Agent'})
+
 @app.route('/scan', methods=['POST'])
 def scan_wallet():
     """API endpoint to scan a wallet"""
@@ -81,9 +86,32 @@ def scan_wallet():
     
     return jsonify({'message': 'Scan started', 'address': address})
 
+@app.route('/api/scan', methods=['POST'])
+def api_scan_wallet():
+    """API endpoint to scan a wallet (for production)"""
+    return scan_wallet()
+
 @app.route('/status/<address>')
 def get_status(address):
     """Get scan status for an address"""
+    if address not in scan_status:
+        return jsonify({'status': 'not_found'})
+    
+    status = scan_status[address]
+    result = scan_results.get(address, "")
+    
+    return jsonify({
+        'status': status,
+        'result': result
+    })
+
+@app.route('/api/status')
+def api_get_status():
+    """Get scan status for an address (for production)"""
+    address = request.args.get('address')
+    if not address:
+        return jsonify({'error': 'Address parameter is required'}), 400
+    
     if address not in scan_status:
         return jsonify({'status': 'not_found'})
     
