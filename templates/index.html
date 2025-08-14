@@ -827,27 +827,38 @@
             resultSection.style.display = 'none';
             
                          try {
-                 // Start scan - use different endpoints for localhost vs Netlify
+                 // Start scan - robust endpoint selection for prod/local
                  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                 const scanEndpoint = isLocalhost ? '/scan' : '/api/scan';
+                 const endpoints = isLocalhost ? ['/scan'] : ['/api/scan', '/scan'];
                  
-                 const response = await fetch(scanEndpoint, {
-                     method: 'POST',
-                     headers: {
-                         'Content-Type': 'application/json',
-                     },
-                     body: JSON.stringify({ address: address })
-                 });
-                
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Failed to start scan');
-                }
-                
-                // Poll for results
-                pollResults(address);
-                
-            } catch (error) {
+                 let response;
+                 let lastError;
+                 for (const ep of endpoints) {
+                     try {
+                         response = await fetch(ep, {
+                             method: 'POST',
+                             headers: { 'Content-Type': 'application/json' },
+                             body: JSON.stringify({ address })
+                         });
+                         if (response.ok) break;
+                         try {
+                             const err = await response.json();
+                             lastError = new Error(err.error || `Request failed: ${response.status}`);
+                         } catch {
+                             lastError = new Error(`Request failed: ${response.status}`);
+                         }
+                     } catch (e) {
+                         lastError = e;
+                     }
+                 }
+                 if (!response || !response.ok) {
+                     throw lastError || new Error('Failed to start scan');
+                 }
+                 
+                 // Poll for results
+                 pollResults(address);
+                 
+             } catch (error) {
                 showError(error.message);
                 resetUI();
             }
@@ -860,12 +871,31 @@
             
                          const pollInterval = setInterval(async () => {
                  try {
-                     // Use different endpoints for localhost vs Netlify
+                     // Robust endpoint selection for prod/local
                      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                     const statusEndpoint = isLocalhost ? `/status/${address}` : `/api/status?address=${address}`;
+                     const endpoints = isLocalhost ? [`/status/${address}`] : [`/api/status?address=${address}`, `/status/${address}`];
                      
-                     const response = await fetch(statusEndpoint);
-                     const data = await response.json();
+                     let data = null;
+                     let lastError;
+                     for (const ep of endpoints) {
+                         try {
+                             const resp = await fetch(ep);
+                             if (!resp.ok) {
+                                 try {
+                                     const err = await resp.json();
+                                     lastError = new Error(err.error || `Request failed: ${resp.status}`);
+                                 } catch {
+                                     lastError = new Error(`Request failed: ${resp.status}`);
+                                 }
+                                 continue;
+                             }
+                             data = await resp.json();
+                             break;
+                         } catch (e) {
+                             lastError = e;
+                         }
+                     }
+                     if (!data) throw lastError || new Error('Failed to get status');
                     
                     if (data.status === 'completed') {
                         clearInterval(pollInterval);
@@ -876,12 +906,12 @@
                         showError(data.result);
                         resetUI();
                     }
-                } catch (error) {
-                    clearInterval(pollInterval);
-                    showError('Failed to get scan results');
-                    resetUI();
-                }
-            }, 1000);
+                 } catch (error) {
+                     clearInterval(pollInterval);
+                     showError('Failed to get scan results');
+                     resetUI();
+                 }
+             }, 1000);
         }
 
         // Show results
